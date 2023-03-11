@@ -1,0 +1,162 @@
+
+
+ 
+//1
+ db.topics.aggregate([
+
+    // Join
+    {
+        $lookup:{
+            from: "tasks",       // other table name
+            localField: "topic_id",   // name of users table field
+            foreignField: "topic_id", // name of userinfo table field
+            as: "task_s"         // alias for userinfo table
+        }
+    }, {   $unwind:"$task_s" },     // $unwind used for getting data in object or for one record only
+
+   
+   
+    {   
+        $project:{
+            _id : 1,  
+            topic:1,
+            topic_date : 1,
+            userPhone : "$task_s.due_date",
+            
+        }
+    },{$project:{month:{$month:"$topic_date",$month:"$userPhone"}}},{$match: {month: 10}}
+]);
+
+//2
+db.company_drives.find({
+    drive_date:{$gte:new Date("2021-10-05"),$lte: new Date("2021-10-15")}})
+
+
+//3
+    db.company_drives.find({interview:"present"})
+
+    db.company_drives.aggregate([
+
+      // Join
+      {
+          $lookup:{
+              from: "attendance",       // other table name
+              localField: "user-id",   // name of users table field
+              foreignField: "user-id", // name of userinfo table field
+              as: "interview"         // alias for userinfo table
+          }
+      }, {   $unwind:"$interview" },     // $unwind used for getting data in object or for one record only
+  
+     
+     
+      {   
+          $project:{
+              _id : 1,  
+              company_name:1,
+              present: "$interview.present",
+              
+          }
+      }, 
+   
+
+  ]);
+
+
+//4
+    db.users.aggregate([
+
+      // Join
+      {
+          $lookup:{
+              from: "codekata",       // other table name
+              localField: "user-id",   // name of users table field
+              foreignField: "user-id", // name of userinfo table field
+              as: "code_kata"         // alias for userinfo table
+          }
+      }, {   $unwind:"$code_kata" },     // $unwind used for getting data in object or for one record only
+  
+     
+     
+      {   
+          $project:{
+              _id : 1,  
+              name:1,
+              no_problem_solved : "$code_kata.no_of_problems_solved",
+              
+          }
+      }
+  ]);
+
+//6
+
+  db.company_drives.aggregate([ { 
+    $group: { 
+        _id: null, 
+        total: { 
+            $sum: 1 
+        } 
+    } 
+} ] )
+
+
+//5
+db.users.aggregate([
+
+  // Join
+  {
+      $lookup:{
+          from: "attendance",       // other table name
+          localField: "user-id",   // name of users table field
+          foreignField: "user-id", // name of userinfo table field
+          as: "pres_ent"         // alias for userinfo table
+      }
+  }, {   $unwind:"$pres_ent" },     // $unwind used for getting data in object or for one record only
+
+  {
+    $lookup:{
+        from: "tasks",       // other table name
+        localField: "user-id",   // name of users table field
+        foreignField: "user-id", // name of userinfo table field
+        as: "task_s"         // alias for userinfo table
+    }
+}, {   $unwind:"$task_s" }, 
+ 
+  {   
+      $project:{
+          _id : 1,  
+          name:1,
+          submitted:"$task_s.submitted",
+          present:"$pres_ent.present"
+          
+      }
+  }, { $match : { present : false,submitted:false} },{ 
+    $group: { 
+        _id: null, 
+        total: { 
+            $sum: 1 
+        } 
+    } 
+}
+]);
+
+
+
+db.users.aggregate([
+
+    // Join
+    {
+        $lookup:{
+            from: "mentors",       
+            localField: "mentor-id",  
+            foreignField: "mentor-id",
+            as: "menteeCount"         
+        }
+    }, {   $unwind:"$menteeCount" },    
+
+    {   
+        $project:{
+            _id : 1,  
+            name:1,
+        }
+    }
+]);
