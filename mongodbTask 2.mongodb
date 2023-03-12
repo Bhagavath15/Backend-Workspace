@@ -1,18 +1,18 @@
 
 
  
-//1
+//1 Find all the topics and tasks which are thought in the month of October
  db.topics.aggregate([
 
     // Join
     {
         $lookup:{
-            from: "tasks",       // other table name
-            localField: "topic_id",   // name of users table field
-            foreignField: "topic_id", // name of userinfo table field
-            as: "task_s"         // alias for userinfo table
+            from: "tasks",            
+            localField: "topic_id",   
+            foreignField: "topic_id", 
+            as: "task_s"              
         }
-    }, {   $unwind:"$task_s" },     // $unwind used for getting data in object or for one record only
+    }, {   $unwind:"$task_s" },       
 
    
    
@@ -27,12 +27,15 @@
     },{$project:{month:{$month:"$topic_date",$month:"$userPhone"}}},{$match: {month: 10}}
 ]);
 
-//2
+
+//2Find all the company drives which appeared between 15 oct-2020 and 31-oct-2020
+
 db.company_drives.find({
     drive_date:{$gte:new Date("2021-10-05"),$lte: new Date("2021-10-15")}})
 
 
-//3
+//3 Find all the company drives and students who are appeared for the placement.
+
     db.company_drives.find({interview:"present"})
 
     db.company_drives.aggregate([
@@ -40,12 +43,12 @@ db.company_drives.find({
       // Join
       {
           $lookup:{
-              from: "attendance",       // other table name
-              localField: "user-id",   // name of users table field
-              foreignField: "user-id", // name of userinfo table field
-              as: "interview"         // alias for userinfo table
+              from: "attendance",      
+              localField: "user-id",   
+              foreignField: "user-id", 
+              as: "interview"          
           }
-      }, {   $unwind:"$interview" },     // $unwind used for getting data in object or for one record only
+      }, {   $unwind:"$interview" },   
   
      
      
@@ -62,18 +65,19 @@ db.company_drives.find({
   ]);
 
 
-//4
+//4 Find the number of problems solved by the user in codekata
+    
     db.users.aggregate([
 
       // Join
       {
           $lookup:{
-              from: "codekata",       // other table name
-              localField: "user-id",   // name of users table field
-              foreignField: "user-id", // name of userinfo table field
-              as: "code_kata"         // alias for userinfo table
+              from: "codekata",        
+              localField: "user-id",   
+              foreignField: "user-id", 
+              as: "code_kata"          
           }
-      }, {   $unwind:"$code_kata" },     // $unwind used for getting data in object or for one record only
+      }, {   $unwind:"$code_kata" },   
   
      
      
@@ -87,37 +91,26 @@ db.company_drives.find({
       }
   ]);
 
-//6
 
-  db.company_drives.aggregate([ { 
-    $group: { 
-        _id: null, 
-        total: { 
-            $sum: 1 
-        } 
-    } 
-} ] )
-
-
-//5
+//6 Find the number of users who are absent and task is not submitted  between 15 oct-2020 and 31-oct-2020
 db.users.aggregate([
 
   // Join
   {
       $lookup:{
-          from: "attendance",       // other table name
-          localField: "user-id",   // name of users table field
-          foreignField: "user-id", // name of userinfo table field
-          as: "pres_ent"         // alias for userinfo table
+          from: "attendance",     
+          localField: "user-id",  
+          foreignField: "user-id",
+          as: "pres_ent"          
       }
-  }, {   $unwind:"$pres_ent" },     // $unwind used for getting data in object or for one record only
+  }, {   $unwind:"$pres_ent" },   
 
   {
     $lookup:{
-        from: "tasks",       // other table name
-        localField: "user-id",   // name of users table field
-        foreignField: "user-id", // name of userinfo table field
-        as: "task_s"         // alias for userinfo table
+        from: "tasks",          
+        localField: "user-id", 
+        foreignField: "user-id",
+        as: "task_s"            
     }
 }, {   $unwind:"$task_s" }, 
  
@@ -126,10 +119,11 @@ db.users.aggregate([
           _id : 1,  
           name:1,
           submitted:"$task_s.submitted",
-          present:"$pres_ent.present"
+          present:"$pres_ent.present",
+          date:"$task_s.due_date"
           
       }
-  }, { $match : { present : false,submitted:false} },{ 
+  }, { $match : { present : false,submitted:false ,date:{$gte:new Date("2021-10-15"),$lte: new Date("2021-10-31")}}},{ 
     $group: { 
         _id: null, 
         total: { 
@@ -139,7 +133,7 @@ db.users.aggregate([
 }
 ]);
 
-
+//5 Find all the mentors with who has the mentee's count more than 15
 
 db.users.aggregate([
 
